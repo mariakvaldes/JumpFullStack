@@ -3,8 +3,9 @@ from src.models.customer import Customer
 from bson import ObjectId
 
 async def create_customer(customer: Customer):
-    # Logic: Convert model to dict and insert into MongoDB
-    customer_dict = customer.model_dump(by_alias=True)
+    # 'exclude={"id"}' ensures the None value for id isn't sent to MongoDB
+    customer_dict = customer.model_dump(by_alias=True, exclude={"id"})
+    
     result = await customer_collection.insert_one(customer_dict)
     return {"id": str(result.inserted_id), "username": customer.username}
 

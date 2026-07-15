@@ -45,3 +45,31 @@ async def deposit(account_id: str, amount: float):
     await transaction_collection.insert_one(transaction_data)
     
     return {"message": "Deposit successful", "new_balance": result["balance"]}
+
+async def withdraw(account_id: str, amount: float):
+    # 1. Fetch current account state
+    account = await account_collection.find_one({"_id": ObjectId(account_id)})
+    
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+
+    # 2. Cannot withdraw more than balance
+    if account["balance"] < amount:
+        raise HTTPException(status_code=400, detail="Cannot withdraw more than balance")
+    
+    # 3. Update balance
+    result = await account_collection.find_one_and_update(
+        {"_id": ObjectId(account_id)},
+        {"$inc": {"balance": -amount}},
+        return_document=True
+    )
+    
+    # 4. Maintain transaction record
+    await transaction_collection.insert_one({
+        "account_id": account_id,
+        "type": "WITHDRAW",
+        "amount": amount,
+        "timestamp": datetime.utcnow()
+    })
+    
+    return {"message": "Withdrawal successful", "new_balance": result["balance"]}

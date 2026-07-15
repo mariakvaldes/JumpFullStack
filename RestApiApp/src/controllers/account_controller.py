@@ -10,5 +10,8 @@ async def add_account(account: Account):
 
 @router.post("/accounts/{id}/deposit")
 async def deposit_money(id: str, request: dict):
-    # request will look like {"amount": 500}
     return await account_service.deposit(id, request["amount"])
+
+@router.post("/accounts/{id}/withdraw")
+async def withdraw_money(id: str, request: dict):
+    return await account_service.withdraw(id, request["amount"])

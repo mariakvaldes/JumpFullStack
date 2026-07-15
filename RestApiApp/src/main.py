@@ -1,10 +1,13 @@
 from fastapi import FastAPI
 from src.controllers.customer_controller import router as customer_router
+from src.controllers.account_controller import router as account_router
+
 
 app = FastAPI()
 
-# Include the router so your app knows about the /customers endpoint
+# /customers endpoint, /account endpoint
 app.include_router(customer_router)
+app.include_router(account_router)
 
 @app.get("/")
 async def root():

@@ -7,3 +7,8 @@ router = APIRouter()
 @router.post("/accounts")
 async def add_account(account: Account):
     return await account_service.create_account(account)
+
+@router.post("/accounts/{id}/deposit")
+async def deposit_money(id: str, request: dict):
+    # request will look like {"amount": 500}
+    return await account_service.deposit(id, request["amount"])

@@ -5,5 +5,7 @@ MONGO_DETAILS = "mongodb+srv://mariavaldes003_db_user:JQAuhLVWzOATZADr@cluster.5
 
 client = AsyncIOMotorClient(MONGO_DETAILS)
 database = client.bank_db
+
 customer_collection = database.get_collection("customers")
 account_collection = database.get_collection("accounts")
+transaction_collection = database.get_collection("transactions") # transactions to withdraw and deposit

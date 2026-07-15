@@ -15,3 +15,7 @@ async def deposit_money(id: str, request: dict):
 @router.post("/accounts/{id}/withdraw")
 async def withdraw_money(id: str, request: dict):
     return await account_service.withdraw(id, request["amount"])
+
+@router.get("/accounts/{id}/transactions")
+async def get_account_transactions(id: str):
+    return await account_service.get_transactions(id)

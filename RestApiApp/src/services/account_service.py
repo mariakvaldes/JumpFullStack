@@ -73,3 +73,18 @@ async def withdraw(account_id: str, amount: float):
     })
     
     return {"message": "Withdrawal successful", "new_balance": result["balance"]}
+
+async def get_transactions(account_id: str):
+    # Find all transactions for this account
+    cursor = transaction_collection.find({"account_id": account_id})
+    
+    # Convert the MongoDB cursor to a list of dictionaries
+    transactions = await cursor.to_list(length=100)
+    
+    # Clean up the IDs for JSON serialization
+    for t in transactions:
+        t["_id"] = str(t["_id"])
+        if "timestamp" in t:
+            t["timestamp"] = t["timestamp"].isoformat()
+            
+    return transactions

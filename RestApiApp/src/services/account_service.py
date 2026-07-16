@@ -69,7 +69,7 @@ async def withdraw(account_id: str, amount: float):
         "account_id": account_id,
         "type": "WITHDRAW",
         "amount": amount,
-        "timestamp": datetime.utcnow()
+        "timestamp": datetime.now(datetime.UTC) # datetime.utcnow() is outdated
     })
     
     return {"message": "Withdrawal successful", "new_balance": result["balance"]}

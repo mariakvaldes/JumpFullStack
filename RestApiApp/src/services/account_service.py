@@ -74,17 +74,40 @@ async def withdraw(account_id: str, amount: float):
     
     return {"message": "Withdrawal successful", "new_balance": result["balance"]}
 
-async def get_transactions(account_id: str):
-    # Find all transactions for this account
-    cursor = transaction_collection.find({"account_id": account_id})
+async def get_all_accounts():
+    accounts = await account_collection.find().to_list(100)
+    for a in accounts:
+        a["_id"] = str(a["_id"])
+    return accounts
+
+async def get_account_by_id(account_id: str):
+    account = await account_collection.find_one({"_id": ObjectId(account_id)})
+    if account:
+        account["_id"] = str(account["_id"])
+    return account
+
+async def delete_account(account_id: str):
+    account = await get_account_by_id(account_id)
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    if account["balance"] != 0:
+        raise HTTPException(status_code=400, detail="Cannot close: Balance must be 0")
     
-    # Convert the MongoDB cursor to a list of dictionaries
+    await account_collection.delete_one({"_id": ObjectId(account_id)})
+    return {"message": "Account successfully deleted"}
+
+async def get_transactions(account_id: str, type: str = None, sort: str = "desc"):
+    query = {"account_id": account_id}
+    if type:
+        query["type"] = type
+        
+    order = -1 if sort == "desc" else 1
+    
+    cursor = transaction_collection.find(query).sort("timestamp", order)
     transactions = await cursor.to_list(length=100)
     
-    # Clean up the IDs for JSON serialization
     for t in transactions:
         t["_id"] = str(t["_id"])
         if "timestamp" in t:
             t["timestamp"] = t["timestamp"].isoformat()
-            
     return transactions

@@ -1,70 +1,88 @@
-import { useEffect, useState } from "react";
-import "./App.css";
+import React from 'react';
+import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
+import Register from './pages/Register';
 
-function App() {
-  const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [view, setView] = useState("landing"); // New: Tracks which page to show
+// Simple Dashboard Placeholder Component
+function Dashboard() {
+  const { user, role, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const fetchTransactions = () => {
-    const accountId = "6a579058c302cd120f84e464";
-    fetch(`http://127.0.0.1:8000/accounts/${accountId}/transactions`)
-      .then((response) => {
-        if (!response.ok) throw new Error("Could not connect to backend");
-        return response.json();
-      })
-      .then((data) => {
-        setData(data);
-        setView("transactions"); // Switch to transactions view on success
-      })
-      .catch((err) => setError(err.message));
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
-    <div className="app-container">
-      {view === "landing" && (
-        <div className="landing-page">
-          <header>
-            <h1>BankApp</h1>
-          </header>
-          <main>
-            <h2>Welcome, Joe</h2>
-            <p>Your secure financial dashboard.</p>
-            <button onClick={fetchTransactions} className="cta-button">
-              View Transactions
-            </button>
-          </main>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <nav style={{ display: 'flex', justifyContent: 'space-between', background: '#f8f9fa', padding: '10px 20px', borderRadius: '8px', marginBottom: '20px' }}>
+        <div>
+          <h3>Bank App Dashboard</h3>
         </div>
-      )}
-
-      {view === "transactions" && (
-        <div className="dashboard">
-          <button onClick={() => setView("landing")}>Back Home</button>
-          <h1>Transaction History</h1>
-          {error && <p style={{ color: "red" }}>Error: {error}</p>}
-
-          <table className="transaction-table">
-            <thead>
-              <tr>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Date</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((t) => (
-                <tr key={t._id}>
-                  <td>{t.type}</td>
-                  <td>${t.amount}</td>
-                  <td>{new Date(t.timestamp).toLocaleDateString()}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+          <span>Welcome, <strong>{user?.username}</strong> ({role})</span>
+          {role === 'role_admin' && (
+            <Link to="/admin" style={{ color: '#007BFF', textDecoration: 'none', fontWeight: 'bold' }}>Admin Panel</Link>
+          )}
+          <button onClick={handleLogout} style={{ padding: '6px 12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+            Logout
+          </button>
         </div>
-      )}
+      </nav>
+
+      <div style={{ background: '#fff', padding: '20px', border: '1px solid #ddd', borderRadius: '8px' }}>
+        <h2>Welcome Dashboard</h2>
+        <p>You have successfully logged into your secure banking dashboard.</p>
+        <p>Your MongoDB connection and backend token authentication are active and working smoothly!</p>
+      </div>
     </div>
   );
 }
 
-export default App;
+// Simple Admin Panel Placeholder Component
+function AdminPanel() {
+  const navigate = useNavigate();
+  return (
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2>Admin Control Panel</h2>
+      <p style={{ color: 'green' }}>Welcome, Administrator! You have special access privileges here.</p>
+      <button onClick={() => navigate('/dashboard')} style={{ padding: '8px 16px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+        Back to Dashboard
+      </button>
+    </div>
+  );
+}
+
+export default function App() {
+  return (
+    <Routes>
+      {/* Public Auth Routes */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+
+      {/* Protected Routes */}
+      <Route 
+        path="/dashboard" 
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+
+      <Route 
+        path="/admin" 
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <AdminPanel />
+          </ProtectedRoute>
+        } 
+      />
+
+      {/* Default Fallback Redirect */}
+      <Route path="*" element={<Navigate to="/login" replace />} />
+    </Routes>
+  );
+}

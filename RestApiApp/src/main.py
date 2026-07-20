@@ -1,20 +1,26 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware # Import this
-from src.controllers.customer_controller import router as customer_router
-from src.controllers.account_controller import router as account_router
+from fastapi.middleware.cors import CORSMiddleware
+from passlib.context import CryptContext
+import jwt
 
+from src.controllers import account_controller, customer_controller, auth_controller
 
-app = FastAPI()
+app = FastAPI(title="Bank REST API", version="1.0.0")
 
-# 2. Add this middleware to allow communication from React port (5173)
+# --- Enable CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # React Vite dev server
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Allows all methods (GET, POST, OPTIONS, etc.)
+    allow_headers=["*"],  # Allows all headers (Authorization, Content-Type, etc.)
 )
 
-app.include_router(customer_router)
-app.include_router(account_router)
+# --- Include Routers ---
+app.include_router(auth_controller.router)       
+app.include_router(customer_controller.router)   
+app.include_router(account_controller.router)    
 
+@app.get("/")
+def read_root():
+    return {"message": "Welcome to the Bank REST API"}
